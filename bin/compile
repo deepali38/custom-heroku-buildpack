@@ -4,54 +4,55 @@ indent() {
     sed -u 's/^/       /'
 }
 
-BUILD_DIR="/app"
-CACHE_DIR=$2
-ENV_DIR=$3
+BUILD_DIR=${1}
+CACHE_DIR=${2:-}
+ENV_DIR=${3:-}
 
+if [[ -z "$BUILD_DIR" ]]; then
+    echo "Error: BUILD_DIR is not set or empty. Please provide a valid build directory as the first argument."
+    exit 1
+fi
+
+# Debugging output
+echo "BUILD_DIR: $BUILD_DIR"
+echo "CACHE_DIR: $CACHE_DIR"
+echo "ENV_DIR: $ENV_DIR"
+
+echo "       -----> Custom buildpack: Adding runtime script to .profile.d at startup"
+
+# Create .profile.d directory
+mkdir -p "${BUILD_DIR}/.profile.d" || { echo "Error: Failed to create ${BUILD_DIR}/.profile.d"; exit 1; }
+
+# Define Procfile paths
 LIB_WEB_PROCFILE="${BUILD_DIR}/lib/web/Procfile"
 LIB_WORKER_PROCFILE="${BUILD_DIR}/lib/worker/Procfile"
 PROCFILE="${BUILD_DIR}/Procfile"
 
-echo "BUILD_DIR: ${BUILD_DIR}"
-echo "LIB_WEB_PROCFILE: ${LIB_WEB_PROCFILE}"
-echo "LIB_WORKER_PROCFILE: ${LIB_WORKER_PROCFILE}"
-echo "PROCFILE: ${PROCFILE}"
-
-echo "-----> Custom buildpack: Adding runtime script to .profile.d" | indent
-
-# Create .profile.d directory and the combine_procfile.sh script for startup
-
-mkdir -p "${BUILD_DIR}/.profile.d"
-
 cat <<EOF > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
 #!/usr/bin/env bash
 
-echo "-----> Runtime: Combining Procfiles" >&2
+echo "-----> Runtime: Combining Procfiles"
 
-LIB_WEB_PROCFILE="\${BUILD_DIR}/lib/web/Procfile"
-LIB_WORKER_PROCFILE="\${BUILD_DIR}/lib/worker/Procfile"
-PROCFILE="\${BUILD_DIR}/Procfile"
-
-if [[ -f "\${LIB_WEB_PROCFILE}" ]] && [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
-    cat "\${LIB_WEB_PROCFILE}" > "\${PROCFILE}"
-    echo "" >> "\${PROCFILE}"
-    cat "\${LIB_WORKER_PROCFILE}" >> "\${PROCFILE}"
-    echo "Combined Procfiles into \${PROCFILE}" >&2
-elif [[ -f "\${LIB_WEB_PROCFILE}" ]]; then
-    cat "\${LIB_WEB_PROCFILE}" "\${PROCFILE}"
-    echo "Copied \${LIB_WEB_PROCFILE} as \${PROCFILE}" >&2
-elif [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
-    cat "\${LIB_WORKER_PROCFILE}" "\${PROCFILE}"
-    echo "Copied \${LIB_WORKER_PROCFILE} as \${PROCFILE}" >&2
+if [[ -f "${LIB_WEB_PROCFILE}" ]] && [[ -f "${LIB_WORKER_PROCFILE}" ]]; then
+    cat "${LIB_WEB_PROCFILE}" > "${PROCFILE}"
+    echo "" >> "${PROCFILE}"
+    cat "${LIB_WORKER_PROCFILE}" >> "${PROCFILE}"
+    echo "Combined Procfiles into ${PROCFILE}"
+elif [[ -f "${LIB_WEB_PROCFILE}" ]]; then
+    cat "${LIB_WEB_PROCFILE}" > "${PROCFILE}"
+    echo "Copied ${LIB_WEB_PROCFILE} into ${PROCFILE}"
+elif [[ -f "${LIB_WORKER_PROCFILE}" ]]; then
+    cat "${LIB_WORKER_PROCFILE}" > "${PROCFILE}"
+    echo "Copied ${LIB_WORKER_PROCFILE} into ${PROCFILE}"
 else
-    echo "No Procfiles found at runtime." >&2
+    echo "No Procfiles found."
 fi
 EOF
 
 # Make the runtime script executable
-chmod +x "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
+chmod +x "${BUILD_DIR}/.profile.d/combine_procfiles.sh" || { echo "Error: Failed to make combine_procfiles.sh executable"; exit 1; }
 
-echo "-----> Custom buildpack: Setup complete" | indent
+echo "       -----> Custom buildpack: Setup complete"
 
 APP_DIR=$(dirname "${BUILD_DIR}/${PROCFILE}")
 
