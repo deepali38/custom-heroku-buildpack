@@ -24,14 +24,19 @@ echo "       -----> Custom buildpack: Adding runtime script to .profile.d at sta
 mkdir -p "${BUILD_DIR}/.profile.d" || { echo "Error: Failed to create ${BUILD_DIR}/.profile.d"; exit 1; }
 
 # Define Procfile paths
-LIB_WEB_PROCFILE="app/lib/web/Procfile"
-LIB_WORKER_PROCFILE="app/lib/worker/Procfile"
-PROCFILE="app/Procfile"
+LIB_WEB_PROCFILE="/app/lib/web/Procfile"
+LIB_WORKER_PROCFILE="/app/lib/worker/Procfile"
+PROCFILE="/app/Procfile"
 
 cat <<EOF > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
 #!/usr/bin/env bash
 
 echo "-----> Runtime: Combining Procfiles"
+echo "Combining Procfiles..." >&2
+
+echo "LIB_WEB_PROCFILE: $LIB_WEB_PROCFILE"
+echo "LIB_WORKER_PROCFILE: $LIB_WORKER_PROCFILE"
+echo "PROCFILE: $PROCFILE"
 
 if [[ -f "${LIB_WEB_PROCFILE}" ]] && [[ -f "${LIB_WORKER_PROCFILE}" ]]; then
     cat "${LIB_WEB_PROCFILE}" > "${PROCFILE}"
