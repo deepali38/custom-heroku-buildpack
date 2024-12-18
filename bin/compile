@@ -8,6 +8,15 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
 
+LIB_WEB_PROCFILE="${BUILD_DIR}/lib/web/Procfile"
+LIB_WORKER_PROCFILE="${BUILD_DIR}/lib/worker/Procfile"
+PROCFILE="${BUILD_DIR}/Procfile"
+
+echo "BUILD_DIR: ${BUILD_DIR}"
+echo "LIB_WEB_PROCFILE: ${LIB_WEB_PROCFILE}"
+echo "LIB_WORKER_PROCFILE: ${LIB_WORKER_PROCFILE}"
+echo "PROCFILE: ${PROCFILE}"
+
 echo "-----> Custom buildpack: Adding runtime script to .profile.d" | indent
 
 # Create .profile.d directory and the combine_procfile.sh script for startup
@@ -19,8 +28,8 @@ cat <<EOF > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
 
 echo "-----> Runtime: Combining Procfiles" >&2
 
-LIB_WEB_PROCFILE="/lib/web/Procfile"
-LIB_WORKER_PROCFILE="/lib/worker/Procfile"
+LIB_WEB_PROCFILE="\${BUILD_DIR}/lib/web/Procfile"
+LIB_WORKER_PROCFILE="\${BUILD_DIR}/lib/worker/Procfile"
 PROCFILE="\${BUILD_DIR}/Procfile"
 
 if [[ -f "\${LIB_WEB_PROCFILE}" ]] && [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
