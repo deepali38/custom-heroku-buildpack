@@ -38,10 +38,10 @@ if [[ -f "\${LIB_WEB_PROCFILE}" ]] && [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
     cat "\${LIB_WORKER_PROCFILE}" >> "\${PROCFILE}"
     echo "Combined Procfiles into \${PROCFILE}" >&2
 elif [[ -f "\${LIB_WEB_PROCFILE}" ]]; then
-    cp "\${LIB_WEB_PROCFILE}" "\${PROCFILE}"
+    cat "\${LIB_WEB_PROCFILE}" "\${PROCFILE}"
     echo "Copied \${LIB_WEB_PROCFILE} as \${PROCFILE}" >&2
 elif [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
-    cp "\${LIB_WORKER_PROCFILE}" "\${PROCFILE}"
+    cat "\${LIB_WORKER_PROCFILE}" "\${PROCFILE}"
     echo "Copied \${LIB_WORKER_PROCFILE} as \${PROCFILE}" >&2
 else
     echo "No Procfiles found at runtime." >&2
