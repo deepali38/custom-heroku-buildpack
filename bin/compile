@@ -4,19 +4,19 @@ indent() {
     sed -u 's/^/       /'
 }
 
-BUILD_DIR=${1}
+BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 
-if [[ -z "$BUILD_DIR" ]]; then
+if [[ -z "${BUILD_DIR}" ]]; then
     echo "Error: BUILD_DIR is not set or empty. Please provide a valid build directory as the first argument."
     exit 1
 fi
 
 # Debugging output
-echo "BUILD_DIR: $BUILD_DIR"
-echo "CACHE_DIR: $CACHE_DIR"
-echo "ENV_DIR: $ENV_DIR"
+echo "BUILD_DIR: ${BUILD_DIR}"
+echo "CACHE_DIR: ${CACHE_DIR}"
+echo "ENV_DIR: ${ENV_DIR}"
 
 echo "       -----> Custom buildpack: Adding runtime script to .profile.d at startup"
 
@@ -24,9 +24,9 @@ echo "       -----> Custom buildpack: Adding runtime script to .profile.d at sta
 mkdir -p "${BUILD_DIR}/.profile.d" || { echo "Error: Failed to create ${BUILD_DIR}/.profile.d"; exit 1; }
 
 # Define Procfile paths
-LIB_WEB_PROCFILE="${BUILD_DIR}/lib/web/Procfile"
-LIB_WORKER_PROCFILE="${BUILD_DIR}/lib/worker/Procfile"
-PROCFILE="${BUILD_DIR}/Procfile"
+LIB_WEB_PROCFILE="app/lib/web/Procfile"
+LIB_WORKER_PROCFILE="app/lib/worker/Procfile"
+PROCFILE="app/Procfile"
 
 cat <<EOF > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
 #!/usr/bin/env bash
