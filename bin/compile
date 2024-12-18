@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+indent() {
+    sed -u 's/^/       /'
+}
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+echo "-----> Custom buildpack: Adding runtime script to .profile.d" | indent
+
+# Create .profile.d directory and the combine_procfile.sh script for startup
+
+mkdir -p "${BUILD_DIR}/.profile.d"
+
+cat <<EOF > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
+#!/usr/bin/env bash
+
+echo "-----> Runtime: Combining Procfiles" >&2
+
+LIB_WEB_PROCFILE="\${BUILD_DIR}/lib/web/Procfile"
+LIB_WORKER_PROCFILE="\${BUILD_DIR}/lib/worker/Procfile"
+PROCFILE="\${BUILD_DIR}/Procfile"
+
+if [[ -f "\${LIB_WEB_PROCFILE}" ]] && [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
+    cat "\${LIB_WEB_PROCFILE}" > "\${PROCFILE}"
+    echo "" >> "\${PROCFILE}"
+    cat "\${LIB_WORKER_PROCFILE}" >> "\${PROCFILE}"
+    echo "Combined Procfiles into \${PROCFILE}" >&2
+elif [[ -f "\${LIB_WEB_PROCFILE}" ]]; then
+    cp "\${LIB_WEB_PROCFILE}" "\${PROCFILE}"
+    echo "Copied \${LIB_WEB_PROCFILE} as \${PROCFILE}" >&2
+elif [[ -f "\${LIB_WORKER_PROCFILE}" ]]; then
+    cp "\${LIB_WORKER_PROCFILE}" "\${PROCFILE}"
+    echo "Copied \${LIB_WORKER_PROCFILE} as \${PROCFILE}" >&2
+else
+    echo "No Procfiles found at runtime." >&2
+fi
+EOF
+
+# Make the runtime script executable
+chmod +x "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
+
+echo "-----> Custom buildpack: Setup complete" | indent
+
+APP_DIR=$(dirname "${BUILD_DIR}/${PROCFILE}")
+
+if [[ -f "${APP_DIR}/app.json" ]]; then
+    cp "${APP_DIR}/app.json" "${BUILD_DIR}/app.json"
+    echo "Copied ${APP_DIR}/app.json as app.json successfully" | indent
+fi
