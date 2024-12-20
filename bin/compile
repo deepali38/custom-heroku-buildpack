@@ -28,7 +28,8 @@ LIB_WEB_PROCFILE="/app/lib/web/Procfile"
 LIB_WORKER_PROCFILE="/app/lib/worker/Procfile"
 PROCFILE="/app/Procfile"
 
-cat <<EOF > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
+# Create the runtime script to combine Procfiles
+cat << "EOF" > "${BUILD_DIR}/.profile.d/combine_procfiles.sh"
 #!/usr/bin/env bash
 
 echo "-----> Runtime: Combining Procfiles"
@@ -38,20 +39,29 @@ echo "LIB_WEB_PROCFILE: $LIB_WEB_PROCFILE"
 echo "LIB_WORKER_PROCFILE: $LIB_WORKER_PROCFILE"
 echo "PROCFILE: $PROCFILE"
 
-if [[ -f "${LIB_WEB_PROCFILE}" ]] && [[ -f "${LIB_WORKER_PROCFILE}" ]]; then
-    cat "${LIB_WEB_PROCFILE}" > "${PROCFILE}"
-    echo "" >> "${PROCFILE}"
-    cat "${LIB_WORKER_PROCFILE}" >> "${PROCFILE}"
-    echo "Combined Procfiles into ${PROCFILE}"
-elif [[ -f "${LIB_WEB_PROCFILE}" ]]; then
-    cat "${LIB_WEB_PROCFILE}" > "${PROCFILE}"
-    echo "Copied ${LIB_WEB_PROCFILE} into ${PROCFILE}"
-elif [[ -f "${LIB_WORKER_PROCFILE}" ]]; then
-    cat "${LIB_WORKER_PROCFILE}" > "${PROCFILE}"
-    echo "Copied ${LIB_WORKER_PROCFILE} into ${PROCFILE}"
-else
-    echo "No Procfiles found."
+# Initialize the final Procfile (if it doesn't exist)
+if [[ ! -f "${PROCFILE}" ]]; then
+    echo "Creating new Procfile"
+    touch "${PROCFILE}"
 fi
+
+# Append the worker Procfile if it exists
+if [[ -f "${LIB_WORKER_PROCFILE}" ]]; then
+    echo "Appending worker Procfile to ${PROCFILE}"
+    cat "${LIB_WORKER_PROCFILE}" >> "${PROCFILE}"
+else
+    echo "No worker Procfile found."
+fi
+
+# Append the web Procfile if it exists
+if [[ -f "${LIB_WEB_PROCFILE}" ]]; then
+    echo "Appending web Procfile to ${PROCFILE}"
+    cat "${LIB_WEB_PROCFILE}" >> "${PROCFILE}"
+else
+    echo "No web Procfile found."
+fi
+
+echo "Combined Procfiles into ${PROCFILE}"
 EOF
 
 # Make the runtime script executable
